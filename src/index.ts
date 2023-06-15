@@ -1,6 +1,3 @@
-export const Greeter = (name: string) => `Hello ${name}`;
-
-
 export class Validator {
 
     private value; // input value
@@ -14,21 +11,28 @@ export class Validator {
     private regexStr = '';
     private types: ('string' | 'number' | 'array' | 'boolean')[] = [];
     private equalValue = null;
+    private exactLen = 0;
+    private maxLen = 0;
+    private minLen = 0;
 
     // check flags
-    private isCheckTypes = false;
+    private isCheckingTypes = false;
 
 
-    private isCheckNotNull = false;
-    private isCheckRegex = false;
-    private isCheckInRange = false;
-    private isCheckMax = false;
-    private isCheckMin = false;
+    private isCheckingNotNull = false;
+    private isCheckingNotEmpty = false;
+    private isCheckingRegex = false;
+    private isCheckingInRange = false;
+    private isCheckingMax = false;
+    private isCheckingMin = false;
 
-    private isCheckIncludeString = false;
-    private isCheckIncludeStringCaseSensitive = false;
+    private isCheckingIncludeString = false;
+    private isCheckingIncludeStringCaseSensitive = false;
 
-    private isCheckEqual = false;
+    private isCheckingEqual = false;
+    private isCheckingMaxLength = false;
+    private isCheckingMinLength = false;
+    private isCheckingExactLength = false;
 
 
     constructor(value: any) {
@@ -36,51 +40,71 @@ export class Validator {
     }
 
     isNotNull(): void {
-        this.isCheckNotNull = true;
+        this.isCheckingNotNull = true;
     }
+
+    isNotEmpty(): void {
+        this.isCheckingNotEmpty = true;
+    }
+
     isBoolean(): void {
-        this.isCheckTypes = true;
+        this.isCheckingTypes = true;
         this.types.push('boolean');
     }
     isNumber(): void {
-        this.isCheckTypes = true;
+        this.isCheckingTypes = true;
         this.types.push('number');
     }
     isArray(): void {
-        this.isCheckTypes = true;
+        this.isCheckingTypes = true;
         this.types.push('array');
     }
     isString(): void {
-        this.isCheckTypes = true;
+        this.isCheckingTypes = true;
         this.types.push('string');
     }
 
     isInRange(range: any[]): void {
-        this.isCheckInRange = true;
+        this.isCheckingInRange = true;
     }
 
     regex(regexStr: string) {
-        this.isCheckRegex = true;
+        this.isCheckingRegex = true;
         this.regexStr = regexStr;
     }
 
+    length(value: number) {
+        this.isCheckingExactLength = true;
+        this.exactLen = value;
+    }
+
+    maxLength(value: number) {
+        this.isCheckingMaxLength = true;
+        this.maxLen = value;
+    }
+
+    minLength(value: number) {
+        this.isCheckingMinLength = true;
+        this.minLen = value;
+    }
 
     // TODO less and equal
     // TODO greated and equal
 
     lessThan(value: number): void {
-        this.isCheckMax = true;
+        this.isCheckingMax = true;
         this.maxNum = value;
     }
 
-    greaterThan(value: number): void {
-        this.isCheckMin = true;
+    greaterThan(value: number): Validator {
+        this.isCheckingMin = true;
         this.minNum = value;
+        return this;
     }
 
     includeString(value: string, isCaseSensitive = true): void {
-        this.isCheckIncludeString = true;
-        this.isCheckIncludeStringCaseSensitive = isCaseSensitive;
+        this.isCheckingIncludeString = true;
+        this.isCheckingIncludeStringCaseSensitive = isCaseSensitive;
         this.includedString = value;
     }
 
@@ -90,7 +114,7 @@ export class Validator {
     //
 
     equal(value: any): void {
-        this.isCheckEqual = true;
+        this.isCheckingEqual = true;
         this.equalValue = value;
     }
 
@@ -98,11 +122,15 @@ export class Validator {
 
     validate(): boolean {
 
-        if (this.isCheckNotNull) {
+        if (this.isCheckingNotNull) {
             if (this.value === null || Number.isNaN(this.value) || this.value === undefined) return false;
         }
-
-        if (this.isCheckTypes) {
+        if (this.isCheckingNotEmpty) {
+            if (this.value === null || Number.isNaN(this.value) || this.value === undefined) return false;
+            if ((this.value + '').length <= 0) return false;
+        }
+        // for bellow checks, the value should not be null.
+        if (this.isCheckingTypes) {
             let flag = true;
             if (this.types.includes('array') && Array.isArray(this.value)) {
                 flag = false;
@@ -120,11 +148,11 @@ export class Validator {
             if (!flag) return false;
         }
 
-        if (this.isCheckMin) {
+        if (this.isCheckingMin) {
             if (this.value < this.minNum) return false;
         }
 
-        if (this.isCheckMax) {
+        if (this.isCheckingMax) {
             if (this.value > this.maxNum) return false;
         }
 
